@@ -1,17 +1,14 @@
-objects = flex_main.o lex.yy.o
-exec = scanner
-$(exec) : $(objects)
-	gcc -g  $(objects) -lfl -o  $(exec)
+total : total_main.c lex.yy.c bison_decaf.tab.c
+	gcc total_main.c bison_decaf.tab.c -lfl -ly -o total
 
-flex_main.o : flex_main.c
-	gcc -g -c -Wall flex_main.c
-lex.yy.o : lex.yy.c
-	gcc -g -c -Wall  lex.yy.c
-lex.yy.c : flex_decaf.l
+bison_decaf.tab.h bison_decaf.tab.c : bison_decaf.y
+	bison -d  bison_decaf.y
+
+lex.yy.c : bison_decaf.tab.h flex_decaf.l
 	flex flex_decaf.l
 
-clean:
-	rm $(objects) $(exec)
+clean :
+	rm total bison_decaf.tab.* lex.yy.c
 
-test:
-	./scanner test_decaf
+test :
+	./total test_bison
