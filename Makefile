@@ -1,5 +1,5 @@
 total : total_main.c lex.yy.c bison_decaf.tab.c
-	gcc total_main.c bison_decaf.tab.c -lfl -ly -o total
+	gcc -g -Wall total_main.c bison_decaf.tab.c -lfl -ly -o total
 
 bison_decaf.tab.h bison_decaf.tab.c : bison_decaf.y
 	bison -d  bison_decaf.y

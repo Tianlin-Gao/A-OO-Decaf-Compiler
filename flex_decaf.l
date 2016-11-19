@@ -210,19 +210,23 @@ typedef [int|float|bool|string|void]
 \/\*[^\*\/]*\*\/ {
     // printf("find mutiple comments\n");
 }
+{letter}{char}* {
+    // printf("find ID %s\n", yytext);
+    yylval.type_str = strdup(yytext);
+    return ID;
+}
 {digit}+ {
     // printf("find decimal %d\n", atoi(yytext));
+    yylval.type_int = atoi(yytext);
     return INTCONSTANT;
 }
 0x{hexdigit}+ {
     char *temp;
     // printf("find hexdigit %lx\n", strtol(yytext+2,&temp, 16));
+    yylval.type_int = strtol(yytext+2,&temp, 16);
     return INTCONSTANT;
 }
-{letter}{char}* {
-    // printf("find ID %s\n", yytext);
-    return ID;
-}
+
 \n {}
 [ \t] {}  /* 忽略空白字符，否则会识别为.（ERROR）*/
 . printf("Error at line %d : %s\n", yylineno, yytext);
