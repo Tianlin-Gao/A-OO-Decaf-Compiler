@@ -38,7 +38,7 @@ NODE *new_LC();
 NODE *new_RC();
 NODE *new_SEMI();
 NODE *new_COMMA();
-
+int error_flag;
 /* When debugging our pure parser, we want to see values and locations
    of the tokens.  */
 /* FIXME: Locations. */
@@ -126,8 +126,10 @@ NODE *new_COMMA();
 Program :
     ClassDefs {
         $$ = new_node("Program", 0, NULL, 1, $1);
-        printf("\n\n\nFinish tree\n\n");
-        PreOrderTraverse($$, 0);
+        if(!error_flag){
+        printf("\n========= Finish tree =========\n");
+            PreOrderTraverse($$, 0);
+        }
     }
     ;
 
@@ -145,11 +147,12 @@ ClassDefs :
 ClassDef :
     CLASS ID ExtendDef LC Fields RC {
         $$ = new_node("ClassDef", 0, NULL, 6, new_ter("CLASS"), new_ter("ID"), $3, new_LC(), $5, new_RC() );
-        printf("class @ %d %d\n", @1.first_line, @6.first_line);
+        // printf("class @ %d %d\n", @1.first_line, @6.first_line);
         // $$ = new_node("ClassDef", 0, NULL, 6, new_ter("CLASS"), new_id($2), $3, new_LC(), $5, new_RC() );
     }
     | error RC {
         $$ = new_node("ClassDef", 0, NULL, 0);
+        error_flag = 1;
         // printf("hhh\n");
     }
     // | error RC
@@ -218,7 +221,11 @@ StmtBlock :
         $$ = new_node("StmtBlock", 0, NULL, 3, new_LC(), $2, new_RC());
 
     }
-    | error RC {$$ = new_node("StmtBlock", 0, NULL, 0); printf("hhh\n");}
+    | error RC {
+        $$ = new_node("StmtBlock", 0, NULL, 0);
+        printf("hhh\n");
+        error_flag = 1;
+    }
     ;
 
 StmtList : {
