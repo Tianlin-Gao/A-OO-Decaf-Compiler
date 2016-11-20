@@ -11,6 +11,8 @@
     yycolumn += yyleng;
 
     int yycolumn = 1;
+
+    void yyerror(const char *s, ...);
 %}
 
 
@@ -219,6 +221,18 @@ typedef [int|float|bool|string|void]
 \/\*[^\*\/]*\*\/ {
     // printf("find mutiple comments\n");
 }
+0x{hexdigit}+ {
+    char *temp;
+    // printf("find hexdigit %lx\n", strtol(yytext+2,&temp, 16));
+    yylval.type_int = strtol(yytext+2,&temp, 16);
+    return INTCONSTANT;
+}
+{digit}+{letter}+{char}* {
+    // printf("syntax error illegal id : %s\n", yytext);
+    yyerror("syntax error, illegal id");
+    return ID;
+}
+
 {letter}{char}* {
     // printf("find ID %s\n", yytext);
     yylval.type_str = strdup(yytext);
@@ -229,12 +243,7 @@ typedef [int|float|bool|string|void]
     yylval.type_int = atoi(yytext);
     return INTCONSTANT;
 }
-0x{hexdigit}+ {
-    char *temp;
-    // printf("find hexdigit %lx\n", strtol(yytext+2,&temp, 16));
-    yylval.type_int = strtol(yytext+2,&temp, 16);
-    return INTCONSTANT;
-}
+
 \n.* {
     strncpy(linebuf, yytext + 1, sizeof(linebuf));
     yycolumn = 1;

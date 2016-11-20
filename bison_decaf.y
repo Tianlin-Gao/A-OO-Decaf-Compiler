@@ -9,7 +9,7 @@
     #include <string.h>
 
 #define PPOINTER(x) printf("%s\n", x)
-// #define YYERROR
+// #define YYDEBUG 1
     typedef struct node_ {
         // char nodetype[10];
         char left_name[20];
@@ -148,6 +148,11 @@ ClassDef :
         printf("class @ %d %d\n", @1.first_line, @6.first_line);
         // $$ = new_node("ClassDef", 0, NULL, 6, new_ter("CLASS"), new_id($2), $3, new_LC(), $5, new_RC() );
     }
+    | error RC {
+        $$ = new_node("ClassDef", 0, NULL, 0);
+        // printf("hhh\n");
+    }
+    // | error RC
     ;
 
 Fields :
@@ -172,19 +177,21 @@ ExtendDef :
 
 Field :
     VarDef {
-        $$ = new_node("VarDef", 0, NULL, 1, $1);
+        $$ = new_node("Field", 0, NULL, 1, $1);
     }
     | FuncDef {
-        $$ = new_node("FuncDef", 0, NULL, 1, $1);
+        $$ = new_node("Field", 0, NULL, 1, $1);
     }
     ;
 
 FuncDef :
     STATIC Type ID LP Formals RP StmtBlock {
         $$ = new_node("FuncDef", 0, NULL, 7, new_ter("STATIC"), $2, new_id($3), new_LP(), $5, new_RP(), $7);
-
     }
     | Type ID LP Formals RP StmtBlock
+    {
+        $$ = new_node("FuncDef", 0, NULL, 6, $1, new_id($2), new_LP(), $4, new_RP(), $6);
+    }
     ;
 
 //变量列表
@@ -211,6 +218,7 @@ StmtBlock :
         $$ = new_node("StmtBlock", 0, NULL, 3, new_LC(), $2, new_RC());
 
     }
+    | error RC {$$ = new_node("StmtBlock", 0, NULL, 0); printf("hhh\n");}
     ;
 
 StmtList : {
