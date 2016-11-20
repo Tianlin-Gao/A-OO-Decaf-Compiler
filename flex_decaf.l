@@ -1,10 +1,19 @@
 %option yylineno
-
 %{
+        char linebuf[500];
     #include <stdio.h>
     #include <stdlib.h>
     #include "bison_decaf.tab.h"
+
+    #define YY_USER_ACTION yylloc.first_line = yylloc.last_line = yylineno;\
+    yylloc.first_column = yycolumn;\
+    yylloc.last_column = yycolumn + yyleng - 1;\
+    yycolumn += yyleng;
+
+    int yycolumn = 1;
 %}
+
+
 
 letter [a-zA-Z_]
 digit [0-9]
@@ -226,8 +235,12 @@ typedef [int|float|bool|string|void]
     yylval.type_int = strtol(yytext+2,&temp, 16);
     return INTCONSTANT;
 }
+\n.* {
+    strncpy(linebuf, yytext + 1, sizeof(linebuf));
+    yycolumn = 1;
+    yyless(1);
+}
 
-\n {}
 [ \t] {}  /* 忽略空白字符，否则会识别为.（ERROR）*/
 . printf("Error at line %d : %s\n", yylineno, yytext);
 

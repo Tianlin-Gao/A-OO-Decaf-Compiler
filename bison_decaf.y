@@ -1,3 +1,7 @@
+%locations
+%error-verbose
+
+
 %{
     #include <stdio.h>
     #include "lex.yy.c"
@@ -5,7 +9,7 @@
     #include <string.h>
 
 #define PPOINTER(x) printf("%s\n", x)
-
+// #define YYERROR
     typedef struct node_ {
         // char nodetype[10];
         char left_name[20];
@@ -18,7 +22,7 @@
 NODE * new_node(const char *left_name, int ivalue, char *str, int right_num, ...);
 void PrintNodeInfo(NODE *p, int depth);
 void PreOrderTraverse(NODE *p, int depth);
-
+void yyerror(const char *s, ...);
 
 NODE *new_int(int num);
 NODE *new_str(char *str);
@@ -34,6 +38,18 @@ NODE *new_LC();
 NODE *new_RC();
 NODE *new_SEMI();
 NODE *new_COMMA();
+
+/* When debugging our pure parser, we want to see values and locations
+   of the tokens.  */
+/* FIXME: Locations. */
+// #define YYPRINT(File, Type, Value) \
+//         yyprint (File, /* FIXME: &yylloc, */ Type, &Value)
+// static void yyprint (FILE *file, /* FIXME: const yyltype *loc, */
+//                      int type, const YYSTYPE *value);
+
+// void yyerror (const YYLTYPE *location, const char *message);
+
+
 %}
 
 %union{
@@ -129,6 +145,7 @@ ClassDefs :
 ClassDef :
     CLASS ID ExtendDef LC Fields RC {
         $$ = new_node("ClassDef", 0, NULL, 6, new_ter("CLASS"), new_ter("ID"), $3, new_LC(), $5, new_RC() );
+        printf("class @ %d %d\n", @1.first_line, @6.first_line);
         // $$ = new_node("ClassDef", 0, NULL, 6, new_ter("CLASS"), new_id($2), $3, new_LC(), $5, new_RC() );
     }
     ;
@@ -430,6 +447,30 @@ Expr :
     ;
 
 %%
+void yyerror(const char *s, ...)
+{
+  va_list ap;
+  va_start(ap, s);
+
+  if(yylloc.first_line){
+       fprintf(stderr, "Line %-3d:%s\n         ", yylloc.first_line, linebuf);
+
+       for (int i = 1; i <= yylloc.last_column; i++) {
+           if(i >= yylloc.first_column){
+               fprintf(stderr, "^");
+           }
+           else{
+               fprintf(stderr, " ");
+           }
+       }
+       fprintf(stderr, "\n" );
+  }
+    // fprintf(stderr, "%s\n %d.%d-%d.%d: error: ", linebuf, yylloc.first_line, yylloc.first_column,
+	//     yylloc.last_line, yylloc.last_column);
+  vfprintf(stderr, s, ap);
+  fprintf(stderr, "\n");
+}
+
 
 void PreOrderTraverse(NODE *p, int depth){
     PrintNodeInfo(p, depth);
@@ -446,6 +487,7 @@ void PrintNodeInfo(NODE *p, int depth){
     for (int i = 0; i < depth; i++) {
         printf("  " );
     }
+
 
     printf("%s\n", p->left_name);
 
