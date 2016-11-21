@@ -7,7 +7,8 @@
     #include "lex.yy.c"
     #include <stdarg.h>
     #include <string.h>
-
+    #define    COLOR_NONE                    "\033[0m"
+   #define     FONT_COLOR_RED             "\033[0;31m"
 #define PPOINTER(x) printf("%s\n", x)
 // #define YYDEBUG 1
     typedef struct node_ {
@@ -472,7 +473,7 @@ void yyerror(const char *s, ...)
 
        for (int i = 1; i <= yylloc.last_column; i++) {
            if(i >= yylloc.first_column){
-               fprintf(stderr, "^");
+               fprintf(stderr, FONT_COLOR_RED"^"COLOR_NONE);
            }
            else{
                fprintf(stderr, " ");
