@@ -106,7 +106,7 @@ typedef [int|float|bool|string|void]
 }
 "string"  {
     // printf("mod\n" );
-    return STRING;
+return STRING;
 }
 "void"  {
     // printf("mod\n" );
@@ -214,6 +214,7 @@ typedef [int|float|bool|string|void]
     }
     else{
         // printf("%s", yytext);
+        yylval.type_str = strdup(yytext);
         return STRINGCONSTANT;
     }
 }

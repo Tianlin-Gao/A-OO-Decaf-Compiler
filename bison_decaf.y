@@ -7,13 +7,14 @@
     #include "lex.yy.c"
     #include <stdarg.h>
     #include <string.h>
+    #include <assert.h>
     #define    COLOR_NONE                    "\033[0m"
    #define     FONT_COLOR_RED             "\033[0;31m"
 #define PPOINTER(x) printf("%s\n", x)
 // #define YYDEBUG 1
     typedef struct node_ {
         // char nodetype[10];
-        char left_name[20];
+        char *left_name;
         int ivalue;
         char *str;
         struct node_ *firstson;
@@ -147,7 +148,7 @@ ClassDefs :
 
 ClassDef :
     CLASS ID ExtendDef LC Fields RC {
-        $$ = new_node("ClassDef", 0, NULL, 6, new_ter("CLASS"), new_ter("ID"), $3, new_LC(), $5, new_RC() );
+        $$ = new_node("ClassDef", 0, NULL, 6, new_ter("CLASS"), new_id($2), $3, new_LC(), $5, new_RC() );
         // printf("class @ %d %d\n", @1.first_line, @6.first_line);
         // $$ = new_node("ClassDef", 0, NULL, 6, new_ter("CLASS"), new_id($2), $3, new_LC(), $5, new_RC() );
     }
@@ -499,13 +500,18 @@ void PreOrderTraverse(NODE *p, int depth){
 }
 
 void PrintNodeInfo(NODE *p, int depth){
-    printf("%d ", depth);
+    // printf("%-3d :", yylloc.first_line);
     for (int i = 0; i < depth; i++) {
         printf("  " );
     }
 
+    printf("%s", p->left_name);
+    if((strcmp(p->left_name, "ID") == 0 )|| (strcmp(p->left_name, "STRCONSTANT") == 0)){
+        assert(p->str != NULL);
+        printf(" : %s", p->str);
+    }
 
-    printf("%s\n", p->left_name);
+    printf("\n" );
 
 }
 
@@ -518,8 +524,10 @@ NODE * new_node(const char *left_name, int ivalue, char *str, int right_num, ...
     if(!p)
         exit(-1);
 
+    assert(left_name!=NULL);
 
-    strcpy(p->left_name, left_name);
+    p->left_name = strdup(left_name);
+    // printf("%s\n", p->left_name);
     p->ivalue = ivalue;
     p->str = str;
 
@@ -545,14 +553,14 @@ NODE * new_node(const char *left_name, int ivalue, char *str, int right_num, ...
 }
 
 NODE *new_int(int num){
-    return new_node( "intconstant", num, NULL, 0);
+    return new_node( "INTCONSTANT", num, NULL, 0);
 }
 
 NODE *new_str(char *str){
-    return new_node( "strconstant", 0, str, 0);
+    return new_node( "STRCONSTANT", 0, str, 0);
 }
 NODE *new_bool(int bool_var){
-    return new_node("boolconstant", bool_var, NULL, 0);
+    return new_node("BOOLCONSTANT", bool_var, NULL, 0);
 }
 NODE *new_null(){
     return new_node("NULL", 0, NULL, 0);
