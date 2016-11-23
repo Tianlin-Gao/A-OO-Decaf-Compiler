@@ -17,8 +17,10 @@
         char *left_name;
         int ivalue;
         char *str;
-        struct node_ *firstson;
-        struct node_ *nextbro;
+        struct node_ ** psons;
+        int right_num;
+        // struct node_ *firstson;
+        // struct node_ *nextbro;
     }NODE;
 
 NODE * new_node(const char *left_name, int ivalue, char *str, int right_num, ...);
@@ -492,9 +494,10 @@ void yyerror(const char *s, ...)
 void PreOrderTraverse(NODE *p, int depth){
     PrintNodeInfo(p, depth);
     // 有孩子，则从p->firstson 到 p->firstson->nextbro->nextbro ...->nextbro
-    NODE *pson;
-    for(pson = p->firstson; pson != NULL; pson = pson->nextbro){
-        PreOrderTraverse(pson, depth + 1);
+    // NODE *pson;
+    for(int i = 0; i < p->right_num; i++){
+        assert(p->psons[i] != NULL);
+        PreOrderTraverse(p->psons[i], depth + 1);
     }
     return;
 }
@@ -502,7 +505,7 @@ void PreOrderTraverse(NODE *p, int depth){
 void PrintNodeInfo(NODE *p, int depth){
     // printf("%-3d :", yylloc.first_line);
     for (int i = 0; i < depth; i++) {
-        printf("  " );
+        printf("%d  ", p->right_num );
     }
 
     printf("%s", p->left_name);
@@ -520,9 +523,11 @@ NODE * new_node(const char *left_name, int ivalue, char *str, int right_num, ...
     va_list arg;
     va_start(arg, right_num);
     NODE *p = malloc(sizeof(NODE));
+
     // 分配失败
     if(!p)
         exit(-1);
+
 
     assert(left_name!=NULL);
 
@@ -532,22 +537,20 @@ NODE * new_node(const char *left_name, int ivalue, char *str, int right_num, ...
     p->str = str;
 
 
-    NODE *pson;
+    // NODE *psons;
+    p->right_num = right_num;
     if(right_num == 0){
-        p->firstson = NULL;
+        p->psons = NULL;
         return p;
     }
     else{
-        p->firstson = va_arg(arg, NODE *);
-        pson = p->firstson;
-        // printf("%s\n", pson->left_name);
-        for (int i = 0; i < right_num-1; i++) {
-            NODE* next_bro = va_arg(arg, NODE *);
-            pson->nextbro = next_bro;
-            pson = pson->nextbro;
+        NODE **psons = malloc(right_num * sizeof(NODE *));
+        if(!psons)
+            exit(-1);
+        for(int i = 0; i < right_num; i++){
+            psons[i] = va_arg(arg, NODE*);
         }
-        // printf("%s %p\n", left_name, pson);
-        pson->nextbro = NULL; //最后一个节点的nextbro置为NULL;
+        p->psons = psons;
         return p;
     }
 }
