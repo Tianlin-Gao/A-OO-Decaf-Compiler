@@ -11,7 +11,7 @@ clean :
 	rm phase1 bison_decaf.tab.* lex.yy.c
 
 test1 :
-	./phase1 test_bison
+	./phase1 test/test_lab1_1
 
 test2 :
-	./phase2 test_lab2
+	./phase2 test/test_lab2

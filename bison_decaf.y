@@ -481,9 +481,9 @@ Expr :
 %%
 void InitPhase2(NODE *root){
     PreOrderTraverse(root, 0);
-    pClass = NewClassNode(NULL);
-    FirstScanTree(root);
-    PrintClassNodeInfo();
+    // pClass = NewClassNode(NULL);
+    // FirstScanTree(root);
+    // PrintClassNodeInfo();
 }
 
 void yyerror(const char *s, ...)
