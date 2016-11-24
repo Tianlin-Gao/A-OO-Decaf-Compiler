@@ -1,5 +1,5 @@
 total : lex.yy.c bison_decaf.tab.c
-	gcc -g -Wall main.c bison_decaf.tab.c -lfl -ly -o phase2
+	gcc -g -Wall main.c bison_decaf.tab.c phase2.c -lfl -ly -o phase2
 
 bison_decaf.tab.h bison_decaf.tab.c : bison_decaf.y
 	bison -d -v bison_decaf.y
