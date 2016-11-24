@@ -3,27 +3,16 @@
 
 
 %{
-    #include <stdio.h>
+
+    #include "user.h"
     #include "lex.yy.c"
-    #include <stdarg.h>
-    #include <string.h>
-    #include <assert.h>
     #define    COLOR_NONE                    "\033[0m"
    #define     FONT_COLOR_RED             "\033[0;31m"
 #define PPOINTER(x) printf("%s\n", x)
 // #define YYDEBUG 1
-    typedef struct node_ {
-        // char nodetype[10];
-        char *left_name;
-        int ivalue;
-        char *str;
-        struct node_ ** psons;
-        int right_num;
-        // struct node_ *firstson;
-        // struct node_ *nextbro;
-    }NODE;
 
-NODE * new_node(const char *left_name, int ivalue, char *str, int right_num, ...);
+
+NODE * new_node(int noderule, const char *left_name, int ivalue, char *str, int right_num, ...);
 void PrintNodeInfo(NODE *p, int depth);
 void PreOrderTraverse(NODE *p, int depth);
 void yyerror(const char *s, ...);
@@ -46,7 +35,7 @@ int error_flag;
 /* When debugging our pure parser, we want to see values and locations
    of the tokens.  */
 /* FIXME: Locations. */
-// #define YYPRINT(File, Type, Value) \
+// #define YYPRINT(File, Type, Value)
 //         yyprint (File, /* FIXME: &yylloc, */ Type, &Value)
 // static void yyprint (FILE *file, /* FIXME: const yyltype *loc, */
 //                      int type, const YYSTYPE *value);
@@ -128,34 +117,41 @@ int error_flag;
 
 %%
 Program :
+	// 1
     ClassDefs {
-        $$ = new_node("Program", 0, NULL, 1, $1);
+        $$ = new_node(1, "Program", 0, NULL, 1, $1);
         if(!error_flag){
         printf("\n========= Finish tree =========\n");
-            PreOrderTraverse($$, 0);
+            // PreOrderTraverse($$, 0);
+            InitPhase2($$);
+
         }
     }
     ;
 
 ClassDefs :
+// 2
     ClassDef  {
-        $$ = new_node("ClassDefs", 0, NULL, 1, $1);
+        $$ = new_node(2, "ClassDefs", 0, NULL, 1, $1);
         // printf("1 of classdefs\n"  );
     }
+// 3
     |  ClassDef ClassDefs  {
-        $$ = new_node("ClassDefs", 0, NULL, 2, $1, $2);
+        $$ = new_node(3, "ClassDefs", 0, NULL, 2, $1, $2);
         // printf("2 of classdefs\n"  );
     }
     ;
 
 ClassDef :
+// 4
     CLASS ID ExtendDef LC Fields RC {
-        $$ = new_node("ClassDef", 0, NULL, 6, new_ter("CLASS"), new_id($2), $3, new_LC(), $5, new_RC() );
+        $$ = new_node(4, "ClassDef", 0, NULL, 6, new_ter("CLASS"), new_id($2), $3, new_LC(), $5, new_RC() );
         // printf("class @ %d %d\n", @1.first_line, @6.first_line);
         // $$ = new_node("ClassDef", 0, NULL, 6, new_ter("CLASS"), new_id($2), $3, new_LC(), $5, new_RC() );
     }
+// 5
     | error RC {
-        $$ = new_node("ClassDef", 0, NULL, 0);
+        $$ = new_node(5, "ClassDef", 0, NULL, 0);
         error_flag = 1;
         // printf("hhh\n");
     }
@@ -163,309 +159,333 @@ ClassDef :
     ;
 
 Fields :
+// 6
     {
-        $$ = new_node("Fields", 0, NULL, 0);
+        $$ = new_node(6, "Fields", 0, NULL, 0);
     }
+// 7
     | Field Fields {
-        $$ = new_node("Fields", 0, NULL, 2, $1, $2);
+        $$ = new_node(7, "Fields", 0, NULL, 2, $1, $2);
     }
     ;
 
 ExtendDef :
+// 8
     {
-        $$ = new_node("ExtendDef", 0, NULL, 0);
+        $$ = new_node(8, "ExtendDef", 0, NULL, 0);
     }
+
+// 9
     | EXTENDS ID
     {
         // printf("%p\n",  $2);
-        $$ = new_node("ExtendDef", 0, NULL, 2, new_ter("EXTENDS"), new_id($2) );
+        $$ = new_node(9, "ExtendDef", 0, NULL, 2, new_ter("EXTENDS"), new_id($2) );
     }
     ;
 
 Field :
+// 10
     VarDef {
-        $$ = new_node("Field", 0, NULL, 1, $1);
+        $$ = new_node(10, "Field", 0, NULL, 1, $1);
     }
+// 11
     | FuncDef {
-        $$ = new_node("Field", 0, NULL, 1, $1);
+        $$ = new_node(11, "Field", 0, NULL, 1, $1);
     }
     ;
 
 FuncDef :
+// 12
     STATIC Type ID LP Formals RP StmtBlock {
-        $$ = new_node("FuncDef", 0, NULL, 7, new_ter("STATIC"), $2, new_id($3), new_LP(), $5, new_RP(), $7);
+        $$ = new_node(12, "FuncDef", 0, NULL, 7, new_ter("STATIC"), $2, new_id($3), new_LP(), $5, new_RP(), $7);
     }
+// 13
     | Type ID LP Formals RP StmtBlock
     {
-        $$ = new_node("FuncDef", 0, NULL, 6, $1, new_id($2), new_LP(), $4, new_RP(), $6);
+        $$ = new_node(13, "FuncDef", 0, NULL, 6, $1, new_id($2), new_LP(), $4, new_RP(), $6);
     }
     ;
 
 //变量列表
 Formals :
 {
-        $$ = new_node("Formals", 0, NULL, 0);
+        $$ = new_node(20, "Formals", 0, NULL, 0);
     }
     | Var FormalTail  {
-        $$ = new_node("Formals", 0, NULL, 2, $1, $2);
+        $$ = new_node(21, "Formals", 0, NULL, 2, $1, $2);
     }
     ;
 
 FormalTail :
 {
-        $$ = new_node("FormalTail", 0, NULL, 0);
+        $$ = new_node(22, "FormalTail", 0, NULL, 0);
     }
     | COMMA Var FormalTail  {
-        $$ = new_node("FormalTail", 0, NULL, 3, new_COMMA(), $2, $3);
+        $$ = new_node(23, "FormalTail", 0, NULL, 3, new_COMMA(), $2, $3);
     }
     ;
 
 StmtBlock :
     LC StmtList RC {
-        $$ = new_node("StmtBlock", 0, NULL, 3, new_LC(), $2, new_RC());
+        $$ = new_node(24, "StmtBlock", 0, NULL, 3, new_LC(), $2, new_RC());
 
     }
     | error RC {
-        $$ = new_node("StmtBlock", 0, NULL, 0);
+        $$ = new_node(25, "StmtBlock", 0, NULL, 0);
         printf("hhh\n");
         error_flag = 1;
     }
     ;
 
 StmtList : {
-        $$ = new_node("StmtList", 0, NULL, 0);
+        $$ = new_node(26, "StmtList", 0, NULL, 0);
     }
     | Stmt StmtList{
-        $$ = new_node("StmtList", 0, NULL, 2, $1, $2);
+        $$ = new_node(27, "StmtList", 0, NULL, 2, $1, $2);
     }
     ;
 
 Stmt :
     VarDef {
-        $$ = new_node("Stmt", 0, NULL, 1, $1);
+        $$ = new_node(28, "Stmt", 0, NULL, 1, $1);
 
     }
     | SimpleStmt SEMI {
-        $$ = new_node("Stmt", 0, NULL, 2, $1, new_SEMI());
+        $$ = new_node(29, "Stmt", 0, NULL, 2, $1, new_SEMI());
     }
     | IfStmt {
-        $$ = new_node("Stmt", 0, NULL, 1, $1);
+        $$ = new_node(30, "Stmt", 0, NULL, 1, $1);
     }
     | WhileStmt {
-        $$ = new_node("Stmt", 0, NULL, 1, $1);
+        $$ = new_node(31, "Stmt", 0, NULL, 1, $1);
     }
     | ForStmt{
-        $$ = new_node("Stmt", 0, NULL, 1, $1);
+        $$ = new_node(32,"Stmt", 0, NULL, 1, $1);
     }
     | BreakStmt SEMI {
-        $$ = new_node("Stmt", 0, NULL, 2, $1, new_SEMI());
+        $$ = new_node(33,"Stmt", 0, NULL, 2, $1, new_SEMI());
     }
     | ReturnStmt SEMI {
-        $$ = new_node("Stmt", 0, NULL, 2, $1, new_SEMI());
+        $$ = new_node(34,"Stmt", 0, NULL, 2, $1, new_SEMI());
     }
     | PrintStmt SEMI {
-        $$ = new_node("Stmt", 0, NULL, 2, $1, new_SEMI());
+        $$ = new_node(35, "Stmt", 0, NULL, 2, $1, new_SEMI());
     }
     | StmtBlock {
-        $$ = new_node("Stmt", 0, NULL, 1, $1);
+        $$ = new_node(36, "Stmt", 0, NULL, 1, $1);
     }
+    ;
 
 SimpleStmt :
     LValue ASSIGNOP Expr {
-        $$ = new_node("SimpleStmt", 0, NULL, 3, $1, new_ter("ASSIGNOP"), $3);
+        $$ = new_node(40, "SimpleStmt", 0, NULL, 3, $1, new_ter("ASSIGNOP"), $3);
 
     }
     | Call {
-        $$ = new_node("SimpleStmt", 0, NULL, 1, $1);
+        $$ = new_node(41, "SimpleStmt", 0, NULL, 1, $1);
     }
     | {
-        $$ = new_node("SimpleStmt", 0, NULL, 0);
+        $$ = new_node(42, "SimpleStmt", 0, NULL, 0);
     }
     ;
 
 LValue :
     Expr PERIOD ID {
-        $$ = new_node("LValue", 0, NULL, 3, $1, new_ter("PEROID"), new_id($3));
+        $$ = new_node(43, "LValue", 0, NULL, 3, $1, new_ter("PEROID"), new_id($3));
     }
     | ID {
-        $$ = new_node("LValue", 0, NULL, 1, new_id($1));
+        $$ = new_node(44, "LValue", 0, NULL, 1, new_id($1));
     }
     | Expr LB Expr RB {
-        $$ = new_node("LValue", 0, NULL, 4, $1,new_LB(), $3, new_RB());
+        $$ = new_node(45, "LValue", 0, NULL, 4, $1,new_LB(), $3, new_RB());
     }
     ;
 
 
 Call :
     Expr PERIOD ID LP Actuals RP{
-        $$ = new_node("Call", 0, NULL, 6, $1, new_ter("PERIOD"), new_id($3), new_LP(), $5, new_RP());
+        $$ = new_node(50, "Call", 0, NULL, 6, $1, new_ter("PERIOD"), new_id($3), new_LP(), $5, new_RP());
     }
     | ID LP Actuals RP
     {
-        $$ = new_node("Call", 0, NULL, 4, new_id($1), new_LP(), $3, new_RP());
+        $$ = new_node(51, "Call", 0, NULL, 4, new_id($1), new_LP(), $3, new_RP());
     }
     ;
 
 //调用时的传参
 Actuals :
     {
-        $$ = new_node("Actuals", 0, NULL, 0);
+        $$ = new_node(52, "Actuals", 0, NULL, 0);
     }
     | ExprList{
-        $$ = new_node("Actuals", 0, NULL, 1, $1);
+        $$ = new_node(53, "Actuals", 0, NULL, 1, $1);
     }
     ;
 
 IfStmt :
     IF LP BoolExpr RP Stmt ELSE Stmt {
-        $$ = new_node("IfStmt", 0, NULL, 7, new_ter("IF"), new_LP(), $3, new_RP(), $5, new_ter("ELSE"), $7);
+        $$ = new_node(54, "IfStmt", 0, NULL, 7, new_ter("IF"), new_LP(), $3, new_RP(), $5, new_ter("ELSE"), $7);
     }
     | IF LP BoolExpr RP Stmt %prec LOWER_THAN_ELSE{
-        $$ = new_node("IfStmt", 0, NULL, 5, new_ter("IF"), new_LP(), $3, new_RP(), $5);
+        $$ = new_node(55, "IfStmt", 0, NULL, 5, new_ter("IF"), new_LP(), $3, new_RP(), $5);
     }
     ;
 
 WhileStmt :
     WHILE LP BoolExpr RP Stmt{
-        $$ = new_node("WhileStmt", 0, NULL, 5, new_ter("WHILE"), new_LP(), $3, new_RP(), $5);
+        $$ = new_node(56, "WhileStmt", 0, NULL, 5, new_ter("WHILE"), new_LP(), $3, new_RP(), $5);
     }
     ;
 
 BoolExpr :
     Expr {
-        $$ = new_node( "BoolExpr", 0, NULL, 1, $1);
+        $$ = new_node(57,  "BoolExpr", 0, NULL, 1, $1);
     }
     ;
 
 ForStmt :
     FOR LP SimpleStmt SEMI BoolExpr SEMI SimpleStmt RP Stmt {
-        $$ = new_node("ForStmt", 0, NULL, 9, new_ter("FOR"), new_LP(), $3, new_SEMI(), $5, new_SEMI(), $7, new_RP(), $9);
+        $$ = new_node(58, "ForStmt", 0, NULL, 9, new_ter("FOR"), new_LP(), $3, new_SEMI(), $5, new_SEMI(), $7, new_RP(), $9);
     }
     ;
 
 BreakStmt :
     BREAK {
-        $$ = new_node("BreakStmt", 0, NULL, 1, new_ter("BREAK"));
+        $$ = new_node(59, "BreakStmt", 0, NULL, 1, new_ter("BREAK"));
     }
     ;
 
 ReturnStmt :
     RETURN {
-        $$ = new_node("ReturnStmt", 0, NULL, 1, new_ter("RETURN"));
+        $$ = new_node(60, "ReturnStmt", 0, NULL, 1, new_ter("RETURN"));
     }
     | RETURN Expr{
-        $$ = new_node("ReturnStmt", 0, NULL, 2, new_ter("RETURN"), $2);
+        $$ = new_node(61, "ReturnStmt", 0, NULL, 2, new_ter("RETURN"), $2);
     }
     ;
 
 PrintStmt :
     PRINT LP ExprList RP{
-        $$ = new_node("PrintStmt", 0, NULL, 4, new_ter("PRINT"), new_LP(), $3, new_RP());
+        $$ = new_node(62, "PrintStmt", 0, NULL, 4, new_ter("PRINT"), new_LP(), $3, new_RP());
     }
     ;
 
 ExprList :
     Expr ExprTail {
-        $$ = new_node("ExprList", 0, NULL, 2, $1, $2);
+        $$ = new_node(70, "ExprList", 0, NULL, 2, $1, $2);
     }
     ;
 
 ExprTail :
     // {$$ = NULL;}
     {
-        $$ = new_node("ExprTail", 0, NULL, 0);
+        $$ = new_node(71, "ExprTail", 0, NULL, 0);
     }
     | COMMA Expr ExprTail {
-        $$ = new_node("ExprTail", 0, NULL, 3, new_COMMA(), $2, $3);
+        $$ = new_node(72, "ExprTail", 0, NULL, 3, new_COMMA(), $2, $3);
     }
     ;
 
 VarDef :
+// 100
     Var SEMI {
-        $$ = new_node("VarDef", 0, NULL, 2, $1, new_SEMI());
+        $$ = new_node(73, "VarDef", 0, NULL, 2, $1, new_SEMI());
     }
     ;
 
 Var :
+// 101
     Type ID {
-        $$ = new_node("Var", 0, NULL, 2, $1, new_id($2));
+        $$ = new_node(74, "Var", 0, NULL, 2, $1, new_id($2));
     }
     ;
 
 Type :
+// 103
     INT {
-        $$ = new_node("Type",0, NULL, 1, new_ter("INT"));
+        $$ = new_node(80, "Type",0, NULL, 1, new_ter("INT"));
     }
     | BOOL{
-        $$ = new_node("Type",0, NULL, 1, new_ter("BOOL"));
+        $$ = new_node(81, "Type",0, NULL, 1, new_ter("BOOL"));
     }
     | STRING{
-        $$ = new_node("Type",0, NULL, 1, new_ter("STRING"));
+        $$ = new_node(82, "Type",0, NULL, 1, new_ter("STRING"));
     }
     | VOID{
-        $$ = new_node("Type",0, NULL, 1, new_ter("VOID"));
+        $$ = new_node(83, "Type",0, NULL, 1, new_ter("VOID"));
     }
     | CLASS ID{
-        $$ = new_node("Type",0, NULL, 2, new_ter("CLASS"), new_id($2));
+        $$ = new_node(84, "Type",0, NULL, 2, new_ter("CLASS"), new_id($2));
     }
     | Type LB RB{
-        $$ = new_node("Type",0, NULL, 3, $1, new_LB(), new_RB());
+        $$ = new_node(85, "Type",0, NULL, 3, $1, new_LB(), new_RB());
     }
     ;
 
 Constant :
     INTCONSTANT {
-        $$ = new_node("Constant",0, NULL, 1, new_int($1));
+        $$ = new_node(90, "Constant",0, NULL, 1, new_int($1));
     }
     | BOOLCONSTANT {
-        $$ = new_node("Constant",0, NULL, 1, new_bool($1));
+        $$ = new_node(91, "Constant",0, NULL, 1, new_bool($1));
 }
     | STRINGCONSTANT {
-        $$ = new_node("Constant",0, NULL, 1, new_str($1));
+        $$ = new_node(92, "Constant",0, NULL, 1, new_str($1));
 }
     | NUL {
-        $$ = new_node("Constant",0, NULL, 1, new_null());
+        $$ = new_node(93, "Constant",0, NULL, 1, new_null());
 }
     ;
 
 Expr :
-    Constant { $$ = new_node("Expr", 0, NULL, 1, $1);}
-    | LValue { $$ = new_node("Expr", 0, NULL, 1, $1);}
+    Constant { $$ = new_node(100, "Expr", 0, NULL, 1, $1);}
+    | LValue {$$ = new_node(101, "Expr", 0, NULL, 1, $1);}
     | THIS   {
-        $$ = new_node( "Expr", 0, NULL, 1, new_ter("this"));
+        $$ = new_node(102,  "Expr", 0, NULL, 1, new_ter("this"));
     }
     | Call {
-        $$ = new_node("Expr", 0, NULL, 1, $1);
+        $$ = new_node(103, "Expr", 0, NULL, 1, $1);
     }
-    | LP Expr RP {$$ = new_node("Expr", 0,NULL, 3, new_ter("LP"), $2, new_ter("RP"));}
-    | Expr PLUS Expr {$$ = new_node("Expr", 0,NULL, 3, $1, new_ter("PLUS"), $3);}
-    | Expr MINUS Expr   {$$ = new_node("Expr", 0,NULL, 3, $1, new_ter("PLUS"), $3);}
-    | Expr TIMES Expr  {$$ = new_node("Expr", 0,NULL, 3, $1, new_ter("TIMES"), $3);}
-    | Expr DIVIDE Expr  {$$ = new_node("Expr", 0,NULL, 3, $1, new_ter("DIVIDE"), $3);}
-    | Expr MOD Expr  {$$ = new_node("Expr", 0,NULL, 3, $1, new_ter("MOD"), $3);}
-    | Expr LESS Expr  {$$ = new_node("Expr", 0,NULL, 3, $1, new_ter("LESS"), $3);}
-    | Expr LESSEQ Expr  {$$ = new_node("Expr", 0,NULL, 3, $1, new_ter("LESSEQ"), $3);}
-    | Expr MORE Expr  {$$ = new_node("Expr", 0,NULL, 3, $1, new_ter("MORE"), $3);}
-    | Expr MOREEQ Expr  {$$ = new_node("Expr", 0,NULL, 3, $1, new_ter("MOREEQ"), $3);}
-    | Expr EQ Expr  {$$ = new_node("Expr", 0,NULL, 3, $1, new_ter("EQ"), $3);}
-    | Expr NOTEQ Expr  {$$ = new_node("Expr", 0,NULL, 3, $1, new_ter("NOTEQ"), $3);}
-    | Expr OR Expr  {$$ = new_node("Expr", 0,NULL, 3, $1, new_ter("OR"), $3);}
-    | Expr AND Expr  {$$ = new_node("Expr", 0,NULL, 3, $1, new_ter("AND"), $3);}
-    | MINUS Expr %prec UNARYMINUS {$$ = new_node("Expr", 0, NULL, 2, new_ter("UNARYMINUS"), $2);}
-    | NOT Expr %prec UNARYNOT {$$ = new_node("Expr", 0, NULL, 2, new_ter("UNARYNOT"), $2);}
-    | READINTEGER LP RP {$$ = new_node("Expr", 0, NULL, 3, new_ter("READINTEGER"), new_ter("LP"), new_ter("RP"));}
-    | READLINE LP RP {$$ = new_node("Expr", 0, NULL, 3, new_ter("READLINE"), new_ter("LP"), new_ter("RP"));}
-    | NEW ID LP RP {$$ = new_node("Expr", 0, NULL, 4, new_ter("NEW"), new_id($2), new_ter("LP"), new_ter("RP"));}
-    | NEW Type LB Expr RB {$$ = new_node("Expr", 0, NULL, 5, new_ter("NEW"), $2, new_ter("LB"), $4, new_ter("RB")) ;}
+    | LP Expr RP {
+        $$ = new_node(104, "Expr", 0,NULL, 3, new_ter("LP"), $2, new_ter("RP"));
+    }
+    | Expr PLUS Expr {
+        $$ = new_node(105, "Expr", 0,NULL, 3, $1, new_ter("PLUS"), $3);
+    }
+    | Expr MINUS Expr   {$$ = new_node(106, "Expr", 0,NULL, 3, $1, new_ter("PLUS"), $3);}
+    | Expr TIMES Expr  {$$ = new_node(107, "Expr", 0,NULL, 3, $1, new_ter("TIMES"), $3);}
+    | Expr DIVIDE Expr  {$$ = new_node(108, "Expr", 0,NULL, 3, $1, new_ter("DIVIDE"), $3);}
+    | Expr MOD Expr  {$$ = new_node(109, "Expr", 0,NULL, 3, $1, new_ter("MOD"), $3);}
+    | Expr LESS Expr  {$$ = new_node(110, "Expr", 0,NULL, 3, $1, new_ter("LESS"), $3);}
+    | Expr LESSEQ Expr  {$$ = new_node(111, "Expr", 0,NULL, 3, $1, new_ter("LESSEQ"), $3);}
+    | Expr MORE Expr  {$$ = new_node(112, "Expr", 0,NULL, 3, $1, new_ter("MORE"), $3);}
+    | Expr MOREEQ Expr  {$$ = new_node(113, "Expr", 0,NULL, 3, $1, new_ter("MOREEQ"), $3);}
+    | Expr EQ Expr  {$$ = new_node(114, "Expr", 0,NULL, 3, $1, new_ter("EQ"), $3);}
+    | Expr NOTEQ Expr  {$$ = new_node(115, "Expr", 0,NULL, 3, $1, new_ter("NOTEQ"), $3);}
+    | Expr OR Expr  {$$ = new_node(116, "Expr", 0,NULL, 3, $1, new_ter("OR"), $3);}
+    | Expr AND Expr  {$$ = new_node(117, "Expr", 0,NULL, 3, $1, new_ter("AND"), $3);}
+    | MINUS Expr %prec UNARYMINUS {$$ = new_node(118, "Expr", 0, NULL, 2, new_ter("UNARYMINUS"), $2);}
+    | NOT Expr %prec UNARYNOT {$$ = new_node(119, "Expr", 0, NULL, 2, new_ter("UNARYNOT"), $2);}
+    | READINTEGER LP RP { $$ = new_node(120, "Expr", 0, NULL, 3, new_ter("READINTEGER"), new_ter("LP"), new_ter("RP"));}
+    | READLINE LP RP { $$ = new_node(121, "Expr", 0, NULL, 3, new_ter("READLINE"), new_ter("LP"), new_ter("RP"));}
+    | NEW ID LP RP { $$ = new_node(122, "Expr", 0, NULL, 4, new_ter("NEW"), new_id($2), new_ter("LP"), new_ter("RP"));}
+    | NEW Type LB Expr RB {$$ = new_node(123, "Expr", 0, NULL, 5, new_ter("NEW"), $2, new_ter("LB"), $4, new_ter("RB")) ;}
     | INSTANCEOF LP Expr COMMA ID RP {
-        $$ = new_node("Expr", 0, NULL, 6, new_ter("INSTANCEOF"), new_LP(), $3, new_ter("COMMA"), new_id($5), new_RP());
+        $$ = new_node(124, "Expr", 0, NULL, 6, new_ter("INSTANCEOF"), new_LP(), $3, new_ter("COMMA"), new_id($5), new_RP());
     }
     | LP CLASS ID RP Expr {
-        $$ = new_node("Expr", 0, NULL, 5, new_LP(), new_ter("CLASS"), new_id($3), new_RP(), $5);
+        $$ = new_node(125, "Expr", 0, NULL, 5, new_LP(), new_ter("CLASS"), new_id($3), new_RP(), $5);
     }
     ;
 
 %%
+void InitPhase2(NODE *root){
+    PreOrderTraverse(root, 0);
+    pClass = NewClassNode(NULL);
+    FirstScanTree(root);
+    PrintClassNodeInfo();
+}
+
 void yyerror(const char *s, ...)
 {
   va_list ap;
@@ -505,7 +525,8 @@ void PreOrderTraverse(NODE *p, int depth){
 void PrintNodeInfo(NODE *p, int depth){
     // printf("%-3d :", yylloc.first_line);
     for (int i = 0; i < depth; i++) {
-        printf("%d  ", p->right_num );
+        // printf("%d  ", p->right_num );
+        printf("  " );
     }
 
     printf("%s", p->left_name);
@@ -519,7 +540,7 @@ void PrintNodeInfo(NODE *p, int depth){
 }
 
 // NODE * new_node(char *nodetype, char left_name[20], int ivalue, char *str, int right_num, ...){
-NODE * new_node(const char *left_name, int ivalue, char *str, int right_num, ...){
+NODE * new_node(int noderule, const char *left_name, int ivalue, char *str, int right_num, ...){
     va_list arg;
     va_start(arg, right_num);
     NODE *p = malloc(sizeof(NODE));
@@ -535,7 +556,7 @@ NODE * new_node(const char *left_name, int ivalue, char *str, int right_num, ...
     // printf("%s\n", p->left_name);
     p->ivalue = ivalue;
     p->str = str;
-
+    p->noderule = noderule;
 
     // NODE *psons;
     p->right_num = right_num;
@@ -556,46 +577,46 @@ NODE * new_node(const char *left_name, int ivalue, char *str, int right_num, ...
 }
 
 NODE *new_int(int num){
-    return new_node( "INTCONSTANT", num, NULL, 0);
+    return new_node(0,  "INTCONSTANT", num, NULL, 0);
 }
 
 NODE *new_str(char *str){
-    return new_node( "STRCONSTANT", 0, str, 0);
+    return new_node(0,  "STRCONSTANT", 0, str, 0);
 }
 NODE *new_bool(int bool_var){
-    return new_node("BOOLCONSTANT", bool_var, NULL, 0);
+    return new_node(0, "BOOLCONSTANT", bool_var, NULL, 0);
 }
 NODE *new_null(){
-    return new_node("NULL", 0, NULL, 0);
+    return new_node(0, "NULL", 0, NULL, 0);
 }
 NODE *new_ter(char *name){
-    return new_node(name, 0, NULL, 0 );
+    return new_node(0, name, 0, NULL, 0 );
 }
 NODE *new_id(char *str){
     // printf("%s\n", str);
-    return new_node("ID", 0, str, 0);
+    return new_node(0, "ID", 0, str, 0);
 }
 NODE *new_LP(){
-    return new_node("LP", 0, NULL, 0);
+    return new_node(0, "LP", 0, NULL, 0);
 }
 NODE *new_RP(){
-    return new_node("RP", 0, NULL, 0);
+    return new_node(0, "RP", 0, NULL, 0);
 }
 NODE *new_LB(){
-    return new_node("LB", 0, NULL, 0);
+    return new_node(0, "LB", 0, NULL, 0);
 }
 NODE *new_RB(){
-    return new_node("RB", 0, NULL, 0);
+    return new_node(0, "RB", 0, NULL, 0);
 }
 NODE *new_LC(){
-    return new_node("LC", 0, NULL, 0);
+    return new_node(0, "LC", 0, NULL, 0);
 }
 NODE *new_RC(){
-    return new_node("RC", 0, NULL, 0);
+    return new_node(0, "RC", 0, NULL, 0);
 }
 NODE *new_SEMI(){
-    return new_node("SEMI", 0, NULL, 0);
+    return new_node(0, "SEMI", 0, NULL, 0);
 }
 NODE *new_COMMA(){
-    return new_node("COMMA", 0, NULL, 0);
+    return new_node(0, "COMMA", 0, NULL, 0);
 }
