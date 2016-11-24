@@ -3,11 +3,8 @@
 
 
 %{
-    #include <stdio.h>
     #include "lex.yy.c"
-    #include <stdarg.h>
-    #include <string.h>
-    #include <assert.h>
+    #include "user.h"
     #define    COLOR_NONE                    "\033[0m"
    #define     FONT_COLOR_RED             "\033[0;31m"
 #define PPOINTER(x) printf("%s\n", x)
@@ -46,7 +43,7 @@ int error_flag;
 /* When debugging our pure parser, we want to see values and locations
    of the tokens.  */
 /* FIXME: Locations. */
-// #define YYPRINT(File, Type, Value) \
+// #define YYPRINT(File, Type, Value)
 //         yyprint (File, /* FIXME: &yylloc, */ Type, &Value)
 // static void yyprint (FILE *file, /* FIXME: const yyltype *loc, */
 //                      int type, const YYSTYPE *value);
@@ -132,7 +129,7 @@ Program :
         $$ = new_node("Program", 0, NULL, 1, $1);
         if(!error_flag){
         printf("\n========= Finish tree =========\n");
-            PreOrderTraverse($$, 0);
+            InitPhase2($$);
         }
     }
     ;
@@ -466,6 +463,12 @@ Expr :
     ;
 
 %%
+void InitPhase2(NODE *root){
+    PreOrderTraverse(root, 0);
+    FirstScanTree(root);
+    PrintClassNodeInfo();
+}
+
 void yyerror(const char *s, ...)
 {
   va_list ap;
