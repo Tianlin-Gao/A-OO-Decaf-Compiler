@@ -1,0 +1,17 @@
+class Computer{
+    int a;
+
+    void test(int a, int b){
+        i = a;
+        print("hhh\n");
+    }
+}
+
+class Mac extends Computer{
+    int b;
+
+    void Computer(int a, int b){
+        i = a;
+        print("hhh\n");
+    }
+}

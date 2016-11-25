@@ -1,0 +1,24 @@
+class Mac extends Computer{
+    void poweroff(int time){
+
+    }
+
+    void renew(int memory, class CPU corei5){
+
+        price = price * 2;
+        corei3 = corei5;
+    }
+
+    class CPU corei3;
+
+//    int price;
+
+}
+
+class Computer{
+    int price;
+}
+
+class CPU{
+    int Hz;
+}

@@ -1,0 +1,18 @@
+class People extends Mammals{
+    int func(){
+		hello();   
+		a = 5;
+	}
+    int e;
+}
+
+class Mammals{
+	void hello(){
+
+	}
+    int a;
+}
+
+class Fish{
+    int b;
+}
