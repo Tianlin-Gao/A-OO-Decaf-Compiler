@@ -62,8 +62,8 @@ typedef struct classcontainer{
 }ClassContainer;
 
 typedef struct funccontainer{
-    enum re_type retype;
-
+    enum var_type kind;
+    SYMB_ITEM *pclass;
     int is_static;
 
     SYMB_ITEM *pFormals;
@@ -94,8 +94,8 @@ typedef struct symbitem{
 
 /*打印*/
 void myerror(const int code, int line_1, int col_2, const char *s, ...);
-void PrintSymbolTable(SYMB_ITEM *pt);
-void PrintSymbolNode(SYMB_ITEM *p);
+void PrintSymbolTable(SYMB_ITEM *pt, int depth);
+void PrintSymbolNode(SYMB_ITEM *p, int depth);
 
 /*符号表操作 */
 SYMB_ITEM *FindInTable(SYMB_ITEM *pt, const char * str);

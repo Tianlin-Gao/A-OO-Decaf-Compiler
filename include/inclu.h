@@ -6,6 +6,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <assert.h>
+#include "../include/Stack.h"
 
 #define N 100
 #define    COLOR_NONE                    "\033[0m"

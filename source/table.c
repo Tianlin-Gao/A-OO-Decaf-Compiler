@@ -4,6 +4,16 @@
 SYMB_ITEM *pClass;
 SYMB_ITEM *pcur;
 SYMB_ITEM *pcurtable;
+
+POSTK *pScur;
+POSTK *pScurTable;
+
+void PrintTab(int depth){
+    for(int i = 0; i < depth; i++){
+        printf("\t");
+    }
+}
+
 void myerror(const int code, int line_1, int col_1, const char *s, ...){
 
   va_list ap;
@@ -18,32 +28,34 @@ void myerror(const int code, int line_1, int col_1, const char *s, ...){
   fprintf(stderr, "\n");
 }
 
-void PrintSymbolTable(SYMB_ITEM *pt){
+void PrintSymbolTable(SYMB_ITEM *pt, int depth){
     for(SYMB_ITEM *p = pt->next; p != NULL; p = p->next){
-        PrintSymbolNode(p);
+        PrintSymbolNode(p, depth);
     }
 }
 
-void PrintSymbolNode(SYMB_ITEM *p){
+void PrintSymbolNode(SYMB_ITEM *p, int depth){
+    printf("\n");
+    PrintTab(depth);
     switch(p->kind){
         case D_HEAD:
 
         break;
         case D_CLASS:
-            printf("===================\n" );
-            printf("Class Name: %s",p->name );
+            printf("\n===================\n" );
+            printf("Class Name: %s\t",p->name );
             if(p->pClass->baseClassName){
-                printf("  Base Class Name:%s", p->pClass->baseClassName);
+                printf("| Base Class Name:%s", p->pClass->baseClassName);
             }
             printf("\n");
-            PrintSymbolTable(p->pClass->pMembers);
-            printf("===================\n" );
+            PrintSymbolTable(p->pClass->pMembers, depth + 1);
+            printf("\n===================\n" );
             // PrintSymbolTable(p->pClass->pMembers);
         break;
 
-        case D_VAR:
-            printf("\tVar Name:%s  Kind: ", p->name);
-            switch (p->pVar->kind) {
+        case D_FUNC:
+            printf("Func Name: %s \t| Return Type: ",p->name );
+            switch (p->pFunc->kind) {
                 case V_INT:
                     printf("int" );
                 break;
@@ -65,6 +77,35 @@ void PrintSymbolNode(SYMB_ITEM *p){
                 break;
             }
             printf("\n");
+            PrintTab(depth);
+            printf(" >>  Formals:");
+            PrintSymbolTable(p->pFunc->pFormals, depth + 1);
+            break;
+
+
+        case D_VAR:
+            printf("Var  Name: %s\t| Kind: ", p->name);
+            switch (p->pVar->kind) {
+                case V_INT:
+                    printf("int" );
+                break;
+                case V_BOOL:
+                    printf("bool" );
+                break;
+                case V_STRING:
+
+                    printf("string" );
+                break;
+                case V_VOID:
+
+                    printf("void" );
+                break;
+                case V_CLASS:
+
+                    printf("class" );
+                    printf("\t| Class Name: %s", p->pVar->pclass->name);
+                break;
+            }
 
         break;
 
@@ -206,44 +247,66 @@ void ResolveBaseClass(SYMB_ITEM *pc){
     }
 }
 
-void HandleVarTypeDef(const NODE *p){
+void HandleTypeDef(const NODE *p){
+    SYMB_ITEM *ptemp;
     switch (p->noderule) {
         case 83:
-            pcur->pVar->kind = V_INT;
+            if(pcur->kind == D_VAR){
+                pcur->pVar->kind = V_INT;
+            }
+            else if(pcur->kind == D_FUNC){
+                pcur->pFunc->kind = V_INT;
+            }
         break;
         case 84:
-            pcur->pVar->kind = V_BOOL;
+            if(pcur->kind == D_VAR){
+                pcur->pVar->kind = V_BOOL;
+            }
+            else if(pcur->kind == D_FUNC){
+                pcur->pFunc->kind = V_BOOL;
+            }
         break;
         case 85:
-            pcur->pVar->kind = V_STRING;
+            if(pcur->kind == D_VAR){
+                pcur->pVar->kind = V_STRING;
+            }
+            else if(pcur->kind == D_FUNC){
+                pcur->pFunc->kind = V_STRING;
+            }
         break;
         case 86:
-            pcur->pVar->kind = V_VOID;
+            if(pcur->kind == D_VAR){
+                pcur->pVar->kind = V_VOID;
+            }
+            else if(pcur->kind == D_FUNC){
+                pcur->pFunc->kind = V_VOID;
+            }
         break;
         case 87:
-            pcur->pVar->kind = V_CLASS;
-            pcur->pVar->pclass = FindInTable(pClass, p->psons[1]->str);
+
+            ptemp = FindInTable(pClass, p->psons[1]->str);
             //定义的类不存在
-            if(pcur->pVar->pclass == NULL ){
+            if(ptemp == NULL){
                 myerror(0, p->line_1, p->col_1, "对象 %s 的类 %s不存在", pcur->name, p->psons[1]->str);
                 free(pcur);
                 pcur = NULL;
                 return ;
             }
-
+            if(pcur->kind == D_VAR){
+                pcur->pVar->kind = V_CLASS;
+                pcur->pVar->pclass = ptemp;
+            }
+            else if(pcur->kind == D_FUNC){
+                pcur->pFunc->kind = V_CLASS;
+                pcur->pFunc->pclass = ptemp;
+            }
         break;
     }
-    if(FindInTable(pcurtable->pClass->pMembers, pcur->name) == NULL){
-        InsertToTable(pcurtable->pClass->pMembers, pcur);
-        printf("插入变量 %s\n", pcur->name);
-    }
-    else{
-        myerror(0, p->line_1, p->col_1, "变量 %s 重复定义", pcur->name);
-    }
+
 }
 
 void ScanTree(int th, NODE *p){
-    // printf("%d\n", p->noderule);
+    printf("%d\n", p->noderule);
     assert(p != NULL);
     switch(p->noderule){
         case 1:
@@ -287,7 +350,7 @@ void ScanTree(int th, NODE *p){
                 HandleClassDefNode(p);
             }
             else if(th == 2){
-                pcurtable = FindInTable(pClass, p->psons[1]->str);
+                pcurtable = (FindInTable(pClass, p->psons[1]->str))->pClass->pMembers;
             }
             else if(th == 3){
 
@@ -359,7 +422,6 @@ void ScanTree(int th, NODE *p){
 
             }
             else if(th == 2){
-                pcur = NewSymbolItem(D_VAR, NULL); // NULL是因为这时候还不知道
             }
             else if(th == 3){
 
@@ -378,18 +440,43 @@ void ScanTree(int th, NODE *p){
             }
             break;
 
-        case 12: case 13:
+        case 12: //FuncDef Static
             if(th == 1){
 
             }
             else if(th == 2){
-                return;
+                pcur->name = p->psons[2]->str;
+                pcur->pFunc->is_static = 1;
+                //切换到参数符号表
+                push(pScurTable, pcurtable);
+                pcurtable = pcur->pFunc->pFormals;
+                //保存当前函数符号表项
+                assert(pScur != NULL);
+                push(pScur, pcur);
             }
             else if(th == 3){
 
             }
             break;
 
+        case 13:
+            if(th == 1){
+
+            }
+            else if(th == 2){
+                pcur->name = p->psons[1]->str;
+                pcur->pFunc->is_static = 1;
+                //切换到参数符号表
+                push(pScurTable, pcurtable);
+                pcurtable = pcur->pFunc->pFormals;
+                //保存当前函数符号表项
+                assert(pScur != NULL);
+                push(pScur, pcur);
+            }
+            else if(th == 3){
+
+            }
+            break;
 
         case 14:
             if(th == 1){
@@ -444,7 +531,20 @@ void ScanTree(int th, NODE *p){
 
             }
             else if(th == 2){
+                pcur = pop(pScur);
+                pcurtable = pop(pScurTable);
+                if(pcur->kind == D_FUNC){
+                    if(FindInTable(pcurtable, pcur->name) == NULL){
 
+                        InsertToTable(pcurtable, pcur);
+                        printf("插入 %s\n", pcur->name);
+                    }
+                    else{
+                        myerror(0, p->line_1, p->col_1, " %s 重复定义", pcur->name);
+                        // free(pcur)
+                    }
+                }
+                return;
             }
             else if(th == 3){
 
@@ -480,6 +580,7 @@ void ScanTree(int th, NODE *p){
             }
             else if(th == 2){
                 // printf("82\n" );
+                pcur = NewSymbolItem(D_VAR, NULL); // NULL是因为这时候还不知道
                 pcur->name = p->psons[1]->str;
             }
             else if(th == 3){
@@ -495,7 +596,18 @@ void ScanTree(int th, NODE *p){
 
             }
             else if(th == 2){
-                HandleVarTypeDef(p);
+                HandleTypeDef(p);
+                // 如果是变量的话,已经处理完成了,可以插入符号表
+                //如果是其他的话,还需要看参数是否正确
+                if(pcur->kind == D_VAR ){
+                    if(FindInTable(pcurtable, pcur->name) == NULL){
+                        InsertToTable(pcurtable, pcur);
+                        printf("插入 %s\n", pcur->name);
+                    }
+                    else{
+                        myerror(0, p->line_1, p->col_1, " %s 重复定义", pcur->name);
+                    }
+                }
             }
             else if(th == 3){
 

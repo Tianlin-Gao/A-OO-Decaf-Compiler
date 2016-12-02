@@ -470,11 +470,16 @@ Expr :
 %%
 void InitPhase2(NODE *root){
     PreOrderTraverse(root, 0) ;
+
     pClass = NewSymbolItem(D_HEAD, NULL);
+    pScur = initSTACK(STACK_SIZE);
+    pScurTable = initSTACK(STACK_SIZE);
+    // assert(pScur != NULL);
+
     ScanTree(1, root);
     ResolveBaseClass(pClass);
     ScanTree(2, root);
-    PrintSymbolTable(pClass);
+    PrintSymbolTable(pClass, 0);
     // FirstScanTree(root);
     // CheckExtendsError();
     //
