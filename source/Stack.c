@@ -40,7 +40,14 @@ POSTK *push(POSTK *const p, SYMB_ITEM *e) 	//将e入栈，并返回p
 }
 SYMB_ITEM *pop(POSTK *const p)	//出栈到e，并返回p
 {
-    assert(p->pos > 0);
+    if(p->pos <= 0){
+        #ifdef DEBUG
+        printf("p->pos: %d\n", p->pos );
+
+        #endif
+        return NULL;
+    }
+    // assert(p->pos > 0);
     return p->elems[--(p->pos)];
 }
 
@@ -49,9 +56,13 @@ void print(const POSTK*const p)			//打印p指向的栈元素
 {
     printf("\n\n== Top  ==\n");
     for (int i = p->pos - 1; i >= 0; i--) {
-        printf("%s\n", p->elems[i]->name);
+        printf("Stack elem[%d]\t", i);
+        for(SYMB_ITEM *ptemp = p->elems[i]->next; ptemp != NULL; ptemp = ptemp->next){
+            printf("%s ;  ", ptemp->name);
+        }
+        printf("\n");
     }
-    printf("\n\n== Down  ==\n");
+    printf("== Down  ==\n");
 }
 void destroySTACK(POSTK*const p)		//销毁p指向的栈，释放
 {

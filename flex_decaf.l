@@ -257,6 +257,18 @@ return STRING;
     return BREAK;
 }
 
+"true" {
+    printf("(true, BOOLCONSTANT)\n");
+    yylval.type_int = 1;
+    return BOOLCONSTANT;
+}
+
+"false" {
+    printf("(false, BOOLCONSTANT)\n");
+    yylval.type_int = 0;
+    return BOOLCONSTANT;
+}
+
 \"[^\"]*\" {
     if(yytext[yyleng - 2] == '\\'){
         yyless(yyleng - 1);
@@ -295,6 +307,8 @@ return STRING;
     return INTCONSTANT;
 }
 
+
+
 \n.* {
     strncpy(linebuf, yytext + 1, sizeof(linebuf));
     yycolumn = 1;
@@ -303,8 +317,8 @@ return STRING;
 
 [ \t] {}  /* 忽略空白字符，否则会识别为.（ERROR）*/
 . {
-    yyerror("syntax error, illegal id");
-    // error_flag = 1;
+    yyerror("syntax error, illegal token");
+    error_flag = 1;
     // printf("Error at line %d : %s\n", yylineno, yytext);
 }
 
