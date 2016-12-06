@@ -29,10 +29,10 @@ void myerror(const int code, int line_1, int col_1, const char *s, ...){
   va_list ap;
   va_start(ap, s);
   if(line_1){
-        fprintf(stderr, FONT_COLOR_RED"Line %d Col %d: "COLOR_NONE, line_1, col_1);
+        fprintf(stderr, FONT_COLOR_RED"Line:"COLOR_NONE" %3d "FONT_COLOR_RED" Col: "COLOR_NONE"%3d  -->  ", line_1, col_1);
 
   }
-  fprintf(stderr, FONT_COLOR_RED"ERROR %d : "COLOR_NONE, code);
+  // fprintf(stderr, FONT_COLOR_RED"ERROR %d : "COLOR_NONE, code);
 
   vfprintf(stderr, s, ap);
   fprintf(stderr, "\n\n");

@@ -8,6 +8,7 @@
 #include <assert.h>
 #include <stdbool.h>
 
+
 #include "../include/Stack.h"
 
 #define N 100
